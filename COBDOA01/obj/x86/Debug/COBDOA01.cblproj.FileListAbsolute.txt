@@ -1,0 +1,2 @@
+C:\IHCC\COBOL\COBDOA01\obj\x86\Debug\Program1.idy
+C:\IHCC\COBOL\COBDOA01\bin\x86\Debug\Program1.idy

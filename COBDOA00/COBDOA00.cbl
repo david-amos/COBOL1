@@ -64,10 +64,10 @@
            05  O-DD            PIC 99.
            05  FILLER          PIC X       VALUE '/'.
            05  O-YY            PIC 9(4).
-           05  FILLER          PIC X(35)   VALUE SPACES.
-           05  FILLER          PIC X(29)
-                               VALUE 'WILSON''S COBOL STUDENT ROSTER'.
-           05  FILLER          PIC X(44)   VALUE SPACES.
+           05  FILLER          PIC X(36)   VALUE SPACES.
+           05  FILLER          PIC X(27)
+                               VALUE 'AMOS''S COBOL STUDENT ROSTER'.
+           05  FILLER          PIC X(45)   VALUE SPACES.
            05  FILLER          PIC X(6)     VALUE "PAGE:".
            05  O-PCTR          PIC Z9.
 
@@ -140,7 +140,7 @@
            MOVE I-ID TO O-ID.
            MOVE I-LNAME TO O-LNAME.
            MOVE I-LNAME TO O-LNAME.
-           MOVE I-FNAME TO O-LNAME.
+           MOVE I-FNAME TO O-FNAME.
            MOVE I-GPA TO O-GPA.
            MOVE I-START-SALARY TO O-START-SALARY.
 
@@ -148,3 +148,25 @@
                AFTER ADVANCING 2 LINES
                    AT EOP
                        PERFORM 9100-HDGS.
+
+       3000-CLOSING.
+           MOVE C-SCTR TO O-SCTR.
+           WRITE PRTLINE FROM GT-LINE
+               AFTER ADVANCING 3 LINES.
+           CLOSE STUDENT-MASTER.
+           CLOSE PRTOUT. 
+
+       9000-READ.
+           READ STUDENT-MASTER
+               AT END
+                   MOVE "NO" TO MORE-REC.
+
+       9100-HDGS.
+           ADD 1 TO C-PCTR.
+           MOVE C-PCTR TO O-PCTR.
+           WRITE PRTLINE FROM COMPANY-TITLE
+               AFTER ADVANCING PAGE.
+           WRITE PRTLINE FROM COLLUMN-HEADINGS1
+               AFTER ADVANCING 2 LINES.
+           WRITE PRTLINE FROM COLLUMN-HEADINGS2
+               AFTER ADVANCING 1 LINE.
