@@ -1,2 +1,4 @@
 C:\Users\david\source\repos\COBDOA02\bin\x86\Debug\Program1.idy
 C:\Users\david\source\repos\COBDOA02\obj\x86\Debug\Program1.idy
+C:\IHCC\COBOL\COBDOA02\bin\x86\Debug\Program1.idy
+C:\IHCC\COBOL\COBDOA02\obj\x86\Debug\Program1.idy

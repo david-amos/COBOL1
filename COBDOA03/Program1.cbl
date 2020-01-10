@@ -6,7 +6,8 @@
       *-----------------------------------------------------
       *    THIS PROGRAM READS A FILE AND MAKES A       |
       *    REPORT ABOUT BOAT SALES                     |
-      *    IT WILL BREAK ON THE BOAT TYPE.             |
+      *    IT WILL BREAK ON THE STATE FOR MINOR        |
+      *    AND THE BOAT TYPE FOR MAJOR                 |
       *-----------------------------------------------------
 
        ENVIRONMENT DIVISION.
@@ -17,7 +18,7 @@
                ORGANIZATION IS LINE SEQUENTIAL.
 
            SELECT PRTOUT
-               ASSIGN TO "C:\IHCC\COBOL\BOATRPT1.PRT"
+               ASSIGN TO "C:\IHCC\COBOL\BOATRPT2.PRT"
                ORGANIZATION IS RECORD SEQUENTIAL.
 
        DATA DIVISION.
@@ -57,14 +58,20 @@
            05 C-PCTR               PIC 99          VALUE 0.
            05 MORE-RECS            PIC XXX         VALUE 'YES'.
            05 H-BOAT-TYPE          PIC X.
+           05 H-STATE              PIC XX.
            05 C-BOAT-TYPE          PIC X(13).
+           05 C-MN-TOTAL-COST      PIC 9(9)V99     VALUE 0.
+           05 C-MJ-BOAT-CTR        PIC 9(5)        VALUE 0.
+           05 C-MARKUP             PIC 9(7)V99.
+           05 C-ACC-PAC-COST       PIC 9(4)V99.
+           05 C-TAX-AMT            PIC 9(7)V99.
 
        01  CURRENT-DATE-AND-TIME.
            05  THIS-DATE.
-               10 I-YY             PIC 9(4).
-               10 I-MM             PIC 99.
-               10 I-DD             PIC 99.
-           05 I-TIME               PIC X(11).
+               10 I-YY                 PIC 9(4).
+               10 I-MM                 PIC 99.
+               10 I-DD                 PIC 99.
+           05 I-TIME                   PIC X(11).
 
        01  COMPANY-TITLE.
            05  FILLER                  PIC X(6)        VALUE "DATE: ".
@@ -122,13 +129,26 @@
            05 FILLER                   PIC X(11)   VALUE SPACES.
            05 O-TOTAL-COST             PIC Z,ZZZ,ZZZ.99.
 
-       01 MAJOR-BREAK-LINE.
-           05 FILLER                   PIC X(23)   VALUE SPACES.
-           05 FILLER                   PIC X(14) VALUE "SUBTOTALS FOR".
-           05 O-MJ-BOAT-TYPE           PIC X(13).
-           05 FILLER                   PIC X(11)   VALUE SPACES.
+       01 MINOR-BREAK-LINE.
+           05 FILLER                   PIC X(10)   VALUE SPACES.
+           05 FILLER                   PIC X(14)
+                                       VALUE"SUBTOTALS FOR".
+           05 O-MN-STATE               PIC XX.
+           05 FILLER                   PIC X(9)    VALUE SPACES.
+           05 O-MN-BOAT-TYPE           PIC X(26).
            05 FILLER                   PIC X(14)   VALUE "NUMBER SOLD:".
            05 O-BOAT-CTR               PIC Z,ZZ9.
+           05 FILLER                   PIC X(37)   VALUE SPACES.
+           05 O-MN-TOTAL-PRICE         PIC $$$$,$$$,$$$.99.
+
+       01 MAJOR-BREAK-LINE.
+           05 FILLER                   PIC X(10)   VALUE SPACES.
+           05 FILLER                   PIC X(14)
+                                       VALUE "SUBTOTALS FOR".
+           05 FILLER                   PIC X(11)   VALUE SPACES.
+           05 O-MJ-BOAT-TYPE           PIC X(26).
+           05 FILLER                   PIC X(14)   VALUE "NUMBER SOLD:".
+           05 O-MJ-BOAT-CTR            PIC Z,ZZ9.
            05 FILLER                   PIC X(37)   VALUE SPACES.
            05 O-MJ-TOTAL-PRICE         PIC $$$$,$$$,$$$.99.
 
@@ -160,21 +180,54 @@
            MOVE I-DD TO O-DD.
            MOVE I-MM TO O-MM.
 
-           PERFORM 9100-READ.
+           PERFORM 9200-READ.
            MOVE I-BOAT-TYPE TO H-BOAT-TYPE.
-           PERFORM 9200-HEADINGS.
+           MOVE I-STATE TO H-STATE.
+           PERFORM 9300-HEADINGS.
 
        2000-MAINLINE.
            IF H-BOAT-TYPE NOT = I-BOAT-TYPE
-               PERFORM 9000-MAJOR-BREAK.
+               PERFORM 9100-MINOR-BREAK
+               PERFORM 9000-MAJOR-BREAK
+           ELSE
+               IF H-STATE NOT EQUAL I-STATE
+                   PERFORM 9100-MINOR-BREAK.
                
            PERFORM 2100-CALCS.
            PERFORM 2200-OUTPUT.
-           PERFORM 9100-READ.
+           PERFORM 9200-READ.
 
        2100-CALCS.
-           ADD I-BOAT-COST TO I-PREP-COST GIVING C-TOTAL-COST.
-           ADD C-TOTAL-COST TO C-MJ-TOTAL-COST.
+           EVALUATE I-BOAT-TYPE
+               WHEN 'B'
+                   MULTIPLY .33 BY I-BOAT-COST GIVING C-MARKUP ROUNDED
+               WHEN 'P'
+                   MULTIPLY .25 BY I-BOAT-COST GIVING C-MARKUP ROUNDED
+               WHEN 'S'
+                   MULTIPLY .425 BY I-BOAT-COST GIVING C-MARKUP ROUNDED
+               WHEN 'J'
+                   MULTIPLY .33 BY I-BOAT-COST GIVING C-MARKUP ROUNDED
+               WHEN 'C'
+                   MULTIPLY .2 BY I-BOAT-COST GIVING C-MARKUP ROUNDED
+               WHEN 'R'
+                   MULTIPLY .3 BY I-BOAT-COST GIVING C-MARKUP ROUNDED.
+
+           EVALUATE I-ACCESSORY-PACKAGE
+               WHEN 1
+                   MOVE 'ELECTRONICS' TO O-ACCESSORY-PACKAGE
+                   MOVE 5415.3 TO C-ACC-PAC-COST
+               WHEN 2
+                   MOVE 'SKI PACKAGE' TO O-ACCESSORY-PACKAGE
+                   MOVE 3980 TO C-ACC-PAC-COST
+               WHEN 3
+                   MOVE 'FISHING PACKAGE' TO O-ACCESSORY-PACKAGE
+                   MOVE 345.45 TO C-ACC-PAC-COST.
+           COMPUTE C-TAX-AMT ROUNDED = (I-BOAT-COST + C-ACC-PAC-COST + 
+           C-MARKUP + I-PREP-COST)* .06.
+           
+           COMPUTE C-TOTAL-COST ROUNDED = (I-BOAT-COST + C-ACC-PAC-COST
+           + C-MARKUP + I-PREP-COST + C-TAX-AMT).
+           ADD C-TOTAL-COST TO C-MN-TOTAL-COST.
            ADD 1 TO C-BOAT-CTR.
 
        2200-OUTPUT.
@@ -187,20 +240,13 @@
            MOVE I-PREP-COST TO O-PREP-COST.
            MOVE C-TOTAL-COST TO O-TOTAL-COST.
 
-           EVALUATE I-ACCESSORY-PACKAGE
-               WHEN 1
-                   MOVE 'ELECTRONICS' TO O-ACCESSORY-PACKAGE
-               WHEN 2
-                   MOVE 'SKI PACKAGE' TO O-ACCESSORY-PACKAGE
-               WHEN 3
-                   MOVE 'FISHING PACKAGE' TO O-ACCESSORY-PACKAGE.
-
            WRITE PRTLINE FROM DETAIL-LINE
                AFTER ADVANCING 1 LINE
                    AT EOP
-                       PERFORM 9200-HEADINGS.
+                       PERFORM 9300-HEADINGS.
 
        3000-CLOSING.
+           PERFORM 9100-MINOR-BREAK.
            PERFORM 9000-MAJOR-BREAK.
            PERFORM 3100-GRANDTOTALS.
            CLOSE BOAT-CONTROL.
@@ -213,32 +259,26 @@
                AFTER ADVANCING 2 LINES.
 
        9000-MAJOR-BREAK.
-           MOVE C-BOAT-CTR TO O-BOAT-CTR.
+           MOVE C-MJ-BOAT-CTR TO O-MJ-BOAT-CTR.
            MOVE C-MJ-TOTAL-COST TO O-MJ-TOTAL-PRICE.
            WRITE PRTLINE FROM MAJOR-BREAK-LINE
-               AFTER ADVANCING 2 LINES
+               AFTER ADVANCING 1 LINES
                    AT EOP
-                       PERFORM 9200-HEADINGS.
+                       PERFORM 9300-HEADINGS.
            
            EVALUATE I-BOAT-TYPE
                WHEN 'B'
                    MOVE 'BASS BOAT' TO O-BOAT-TYPE
-                   MOVE 'BASS BOAT' TO O-MJ-BOAT-TYPE
                WHEN 'P'
                    MOVE 'PONTOON' TO O-BOAT-TYPE
-                   MOVE 'PONTOON' TO O-MJ-BOAT-TYPE
                WHEN 'S'
                    MOVE 'SKI BOAT' TO O-BOAT-TYPE
-                   MOVE 'SKI BOAT' TO O-MJ-BOAT-TYPE
                WHEN 'J'
                    MOVE 'JOHN BOAT' TO O-BOAT-TYPE
-                   MOVE 'JOHN BOAT' TO O-MJ-BOAT-TYPE
                WHEN 'C'
                    MOVE 'CANOE' TO O-BOAT-TYPE
-                   MOVE 'CANOE' TO O-MJ-BOAT-TYPE
                WHEN 'R'
-                   MOVE 'CABIN CRUISER' TO O-BOAT-TYPE
-                   MOVE 'CABIN CRUISER' TO O-MJ-BOAT-TYPE.
+                   MOVE 'CABIN CRUISER' TO O-BOAT-TYPE.
                
            
            IF MORE-RECS = 'YES'
@@ -248,19 +288,62 @@
            WRITE PRTLINE FROM BLANK-LINE
                AFTER ADVANCING 1 LINE.
 
-           ADD C-BOAT-CTR TO C-GT-BOAT-CTR.
+           ADD C-MJ-BOAT-CTR TO C-GT-BOAT-CTR.
            ADD C-MJ-TOTAL-COST TO C-GT-TOTAL-COST.
            MOVE I-BOAT-TYPE TO H-BOAT-TYPE.
 
-           MOVE 0 TO C-BOAT-CTR.
+           MOVE 0 TO C-MJ-BOAT-CTR.
            MOVE 0 TO C-MJ-TOTAL-COST.
-                  
-       9100-READ.
+
+       9100-MINOR-BREAK.
+           MOVE C-BOAT-CTR TO O-BOAT-CTR.
+           MOVE C-MN-TOTAL-COST TO O-MN-TOTAL-PRICE.
+           MOVE H-STATE TO O-MN-STATE.
+           WRITE PRTLINE FROM MINOR-BREAK-LINE
+               AFTER ADVANCING 2 LINES
+                   AT EOP
+                       PERFORM 9300-HEADINGS.
+           WRITE PRTLINE FROM BLANK-LINE
+               AFTER ADVANCING 1 LINE.
+           EVALUATE H-BOAT-TYPE
+               WHEN 'B'
+                   MOVE 'BASS BOAT' TO O-BOAT-TYPE
+                   MOVE 'BASS BOAT' TO O-MJ-BOAT-TYPE
+                   MOVE 'BASS BOAT' TO O-MN-BOAT-TYPE
+               WHEN 'P'
+                   MOVE 'PONTOON' TO O-BOAT-TYPE
+                   MOVE 'PONTOON' TO O-MJ-BOAT-TYPE
+                   MOVE 'PONTOON' TO O-MN-BOAT-TYPE
+               WHEN 'S'
+                   MOVE 'SKI BOAT' TO O-BOAT-TYPE
+                   MOVE 'SKI BOAT' TO O-MJ-BOAT-TYPE
+                   MOVE 'SKI BOAT' TO O-MN-BOAT-TYPE
+               WHEN 'J'
+                   MOVE 'JOHN BOAT' TO O-BOAT-TYPE
+                   MOVE 'JOHN BOAT' TO O-MJ-BOAT-TYPE
+                   MOVE 'JOHN BOAT' TO O-MN-BOAT-TYPE
+               WHEN 'C'
+                   MOVE 'CANOE' TO O-BOAT-TYPE
+                   MOVE 'CANOE' TO O-MJ-BOAT-TYPE
+                   MOVE 'CANOE' TO O-MN-BOAT-TYPE
+               WHEN 'R'
+                   MOVE 'CABIN CRUISER' TO O-BOAT-TYPE
+                   MOVE 'CABIN CRUISER' TO O-MJ-BOAT-TYPE
+                   MOVE 'CABIN CRUISER' TO O-MN-BOAT-TYPE.
+           ADD C-BOAT-CTR TO C-MJ-BOAT-CTR.
+           ADD C-MN-TOTAL-COST TO C-MJ-TOTAL-COST.
+
+           MOVE I-STATE TO H-STATE.
+           
+           MOVE 0 TO C-BOAT-CTR.
+           MOVE 0 TO C-MN-TOTAL-COST.
+
+       9200-READ.
            READ BOAT-CONTROL
                AT END
                    MOVE 'NO' TO MORE-RECS.
 
-       9200-HEADINGS.
+       9300-HEADINGS.
            ADD 1 TO C-PCTR.
            MOVE C-PCTR TO O-PCTR.
            EVALUATE I-BOAT-TYPE
