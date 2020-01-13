@@ -299,12 +299,6 @@
            MOVE C-BOAT-CTR TO O-BOAT-CTR.
            MOVE C-MN-TOTAL-COST TO O-MN-TOTAL-PRICE.
            MOVE H-STATE TO O-MN-STATE.
-           WRITE PRTLINE FROM MINOR-BREAK-LINE
-               AFTER ADVANCING 2 LINES
-                   AT EOP
-                       PERFORM 9300-HEADINGS.
-           WRITE PRTLINE FROM BLANK-LINE
-               AFTER ADVANCING 1 LINE.
            EVALUATE H-BOAT-TYPE
                WHEN 'B'
                    MOVE 'BASS BOAT' TO O-BOAT-TYPE
@@ -330,6 +324,13 @@
                    MOVE 'CABIN CRUISER' TO O-BOAT-TYPE
                    MOVE 'CABIN CRUISER' TO O-MJ-BOAT-TYPE
                    MOVE 'CABIN CRUISER' TO O-MN-BOAT-TYPE.
+           WRITE PRTLINE FROM MINOR-BREAK-LINE
+               AFTER ADVANCING 2 LINES
+                   AT EOP
+                       PERFORM 9300-HEADINGS.
+           WRITE PRTLINE FROM BLANK-LINE
+               AFTER ADVANCING 1 LINE.
+           
            ADD C-BOAT-CTR TO C-MJ-BOAT-CTR.
            ADD C-MN-TOTAL-COST TO C-MJ-TOTAL-COST.
 
@@ -361,6 +362,7 @@
                    MOVE 'CABIN CRUISER' TO C-BOAT-TYPE.
            MOVE C-BOAT-TYPE TO O-BOAT-TYPE.
            MOVE C-BOAT-TYPE TO O-MJ-BOAT-TYPE.
+           MOVE C-BOAT-TYPE TO O-MN-BOAT-TYPE.
 
            WRITE PRTLINE FROM COMPANY-TITLE
                AFTER ADVANCING PAGE.
