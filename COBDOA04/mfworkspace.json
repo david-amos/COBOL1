@@ -1,0 +1,24 @@
+{
+  "version": "4.0",
+  "cobol": {
+    "directives": {
+      "**/*": [
+        "nognt",
+        "int()",
+        "anim",
+        "max-error\"100\""
+      ],
+      "Program1.cbl": [
+        "nologo",
+        "visualstudio\"3\"",
+        "noanim",
+        "sourcetabstop\"4\"",
+        "noquery",
+        "warnings\"1\"",
+        "nognt",
+        "int()",
+        "anim"
+      ]
+    }
+  }
+}
